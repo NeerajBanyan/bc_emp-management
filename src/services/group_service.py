@@ -6,9 +6,7 @@ from fastapi import HTTPException
 from src.schemas.group import GroupCreate, GroupResponse
 
 
-# -----------------------------------------------------------------------
 # Query 5 – All groups with employee count (JOIN + GROUP BY + COUNT)
-# -----------------------------------------------------------------------
 async def list_groups_with_employee_count(conn: asyncpg.Connection) -> List[GroupResponse]:
     rows = await conn.fetch(
         """

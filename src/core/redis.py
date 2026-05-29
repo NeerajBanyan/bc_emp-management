@@ -1,13 +1,13 @@
 import json
 from typing import Any, Optional
 
-import redis.asyncio as aioredis
+import redis.asyncio as aioredis # used for async Redis operations
 
 from src.core.config import settings
 
-_redis_client: Optional[aioredis.Redis] = None
+_redis_client: Optional[aioredis.Redis] = None #creates a global Redis client variable
 
-
+#Creating Redis connection once and reusing it everywhere.
 async def get_redis() -> aioredis.Redis:
     global _redis_client
     if _redis_client is None:

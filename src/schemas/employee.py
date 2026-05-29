@@ -7,8 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
-# ---------- Employee status enum ----------
-
+# Employee status enum 
 class EmployeeStatus(str, enum.Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
@@ -16,7 +15,7 @@ class EmployeeStatus(str, enum.Enum):
     TERMINATED = "TERMINATED"
 
 
-# ---------- Group sub-schema (used inside employee responses) ----------
+# Group sub-schema (used inside employee responses)
 
 class GroupSummary(BaseModel):
     id: UUID
@@ -24,7 +23,7 @@ class GroupSummary(BaseModel):
     description: Optional[str] = None
 
 
-# ---------- Employee request schemas ----------
+# Employee request schemas
 
 class EmployeeCreate(BaseModel):
     employee_code: str = Field(..., min_length=1, max_length=50)
@@ -73,7 +72,7 @@ class EmployeeUpdate(BaseModel):
         return v.strip() if v else v
 
     @field_validator("phone")
-    @classmethod
+    @classmethod #This tells This function belongs to class level.
     def phone_format(cls, v: Optional[str]) -> Optional[str]:
         if v is None:
             return v
@@ -83,7 +82,7 @@ class EmployeeUpdate(BaseModel):
         return v
 
 
-# ---------- Employee response schema ----------
+# Employee response schema
 
 class EmployeeResponse(BaseModel):
     id: UUID
@@ -101,7 +100,7 @@ class EmployeeResponse(BaseModel):
     groups: List[GroupSummary] = []
 
 
-# ---------- Other response shapes ----------
+# Other response shapes
 
 class PaginatedEmployees(BaseModel):
     total: int
@@ -115,7 +114,7 @@ class DepartmentCount(BaseModel):
     employee_count: int
 
 
-# ---------- Multi-step workflow ----------
+# Multi-step workflow
 
 class CreateAndAssignGroupRequest(BaseModel):
     employee: EmployeeCreate

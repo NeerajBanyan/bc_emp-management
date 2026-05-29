@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings
 
+#BaseSettings is used to manage application configuration/settings.
+#It automatically reads values from:
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres@localhost:5432/banyan_employees"

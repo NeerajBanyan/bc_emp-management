@@ -1,8 +1,8 @@
 from datetime import date
-from typing import List, Optional
-from uuid import UUID
+from typing import List, Optional #List = multiple items, Optional = can be None 
+from uuid import UUID #If you use id = 5, a hacker can just try id = 6, id = 7 and access other people's data.
 
-import asyncpg
+import asyncpg #is a third-party library (installed via pip) that connects Python to PostgreSQL.
 from fastapi import APIRouter, Depends, Query, status
 
 from src.core.database import get_db
@@ -22,10 +22,10 @@ from src.services import employee_service
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
 EMPLOYEE_CACHE_KEY = "employee:{id}"
-EMPLOYEES_LIST_PATTERN = "employees:list:*"
-DEPT_COUNT_KEY = "employees:department_counts"
+EMPLOYEES_LIST_PATTERN = "employees:list:*" #Used to delete all list caches at once.
+DEPT_COUNT_KEY = "employees:department_counts" #Used for caching the department counts result.
 
-
+#function that builds a unique Redis key
 def _list_cache_key(page, limit, sort_by, sort_order, status, department) -> str:
     return f"employees:list:{page}:{limit}:{sort_by}:{sort_order}:{status}:{department}"
 
@@ -37,7 +37,7 @@ async def _invalidate_caches(employee_id: Optional[UUID] = None) -> None:
     await cache_delete_pattern(DEPT_COUNT_KEY)
 
 
-# ---------- List employees ----------
+# List employees 
 
 @router.get("", response_model=PaginatedEmployees)
 async def list_employees(
@@ -66,7 +66,7 @@ async def list_employees(
     return response
 
 
-# ---------- Department counts (Query 3) ----------
+# Department counts (Query 3)
 
 @router.get("/department-counts", response_model=List[DepartmentCount])
 async def department_counts(conn: asyncpg.Connection = Depends(get_db)):
@@ -75,23 +75,23 @@ async def department_counts(conn: asyncpg.Connection = Depends(get_db)):
         return cached
 
     counts = await employee_service.get_department_counts(conn)
-    await cache_set(DEPT_COUNT_KEY, [c.model_dump() for c in counts])
+    await cache_set(DEPT_COUNT_KEY, [c.model_dump() for c in counts]) #model_dump converts the Pydantic model to a dictionary, which can be easily serialized to JSON for caching.
     return counts
 
 
-# ---------- Joining date range (Query 4) ----------
+# Joining date range (Query 4)
 
 @router.get("/joining-date-range", response_model=List[EmployeeResponse])
 async def employees_by_joining_date_range(
-    from_date: date = Query(..., alias="from"),
+    from_date: date = Query(..., alias="from"), #... means required and alias allows us to use "from" as the query parameter instead of "from_date"
     to_date: date = Query(..., alias="to"),
-    conn: asyncpg.Connection = Depends(get_db),
+    conn: asyncpg.Connection = Depends(get_db), #Depends is FastAPI's way of automatically running a function and injecting its result into your route.
 ):
     employees = await employee_service.get_employees_by_joining_date_range(conn, from_date, to_date)
     return [EmployeeResponse(**e) for e in employees]
 
 
-# ---------- Transactional create + assign ----------
+# Transactional create + assign
 
 @router.post("/create-and-assign-group", response_model=EmployeeResponse, status_code=status.HTTP_201_CREATED)
 async def create_and_assign_group(
@@ -100,10 +100,10 @@ async def create_and_assign_group(
 ):
     employee = await employee_service.create_and_assign_group(conn, payload)
     await _invalidate_caches()
-    return EmployeeResponse(**employee)
+    return EmployeeResponse(**employee) # ** takes key-value pairs from a dictionary and passes them as named arguments.
 
 
-# ---------- Get single employee (Query 2 – JOIN with groups) ----------
+# Get single employee (Query 2 – JOIN with groups)
 
 @router.get("/{employee_id}", response_model=EmployeeResponse)
 async def get_employee(employee_id: UUID, conn: asyncpg.Connection = Depends(get_db)):
@@ -118,7 +118,7 @@ async def get_employee(employee_id: UUID, conn: asyncpg.Connection = Depends(get
     return response
 
 
-# ---------- Create employee ----------
+# Create employee
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_employee(payload: EmployeeCreate, conn: asyncpg.Connection = Depends(get_db)):
@@ -128,7 +128,7 @@ async def create_employee(payload: EmployeeCreate, conn: asyncpg.Connection = De
     return {"message": "Employee created successfully", "name": name}
 
 
-# ---------- Update employee ----------
+# Update employee
 
 @router.put("/{employee_id}")
 async def update_employee(
@@ -141,7 +141,7 @@ async def update_employee(
     return {"message": "Employee updated successfully", "name": name}
 
 
-# ---------- Delete employee ----------
+# Delete employee
 
 @router.delete("/{employee_id}")
 async def delete_employee(employee_id: UUID, conn: asyncpg.Connection = Depends(get_db)):
@@ -150,7 +150,7 @@ async def delete_employee(employee_id: UUID, conn: asyncpg.Connection = Depends(
     return {"message": "Employee deleted successfully", "name": name}
 
 
-# ---------- Group assignment sub-routes ----------
+# Group assignment sub-routes
 
 @router.post("/{employee_id}/groups/{group_id}", response_model=EmployeeResponse)
 async def assign_group(

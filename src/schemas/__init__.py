@@ -1,3 +1,5 @@
+# just marks this as a Python package
+
 from src.schemas.employee import (
     EmployeeStatus,
     EmployeeCreate,
@@ -10,6 +12,7 @@ from src.schemas.employee import (
 )
 from src.schemas.group import GroupCreate, GroupResponse
 
+#__all__ — defines what's "public"
 __all__ = [
     "EmployeeStatus",
     "EmployeeCreate",

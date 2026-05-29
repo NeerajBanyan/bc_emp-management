@@ -11,10 +11,8 @@ from src.schemas.employee import CreateAndAssignGroupRequest, DepartmentCount, E
 ALLOWED_SORT_FIELDS = {"first_name", "last_name", "joining_date", "created_at"}
 
 
-# -----------------------------------------------------------------------
 # Helper: fetch one employee row + all its groups using a JOIN
 # This satisfies Query 2: Employee with Group Details Using JOIN
-# -----------------------------------------------------------------------
 async def _get_employee_with_groups(conn: asyncpg.Connection, employee_id: UUID) -> dict:
     rows = await conn.fetch(
         """
@@ -62,9 +60,7 @@ async def _get_employee_with_groups(conn: asyncpg.Connection, employee_id: UUID)
     return employee
 
 
-# -----------------------------------------------------------------------
 # Query 1 – List employees with pagination, sorting, and filtering
-# -----------------------------------------------------------------------
 async def list_employees(
     conn: asyncpg.Connection,
     page: int,
@@ -113,16 +109,12 @@ async def list_employees(
     return total, [dict(r) | {"groups": []} for r in rows]
 
 
-# -----------------------------------------------------------------------
 # Get single employee (uses JOIN – Query 2)
-# -----------------------------------------------------------------------
 async def get_employee(conn: asyncpg.Connection, employee_id: UUID) -> dict:
     return await _get_employee_with_groups(conn, employee_id)
 
 
-# -----------------------------------------------------------------------
 # Create employee
-# -----------------------------------------------------------------------
 async def create_employee(conn: asyncpg.Connection, payload: EmployeeCreate) -> dict:
     # Uniqueness checks
     if await conn.fetchval("SELECT id FROM employees WHERE employee_code = $1", payload.employee_code):
@@ -146,9 +138,7 @@ async def create_employee(conn: asyncpg.Connection, payload: EmployeeCreate) -> 
     return dict(row) | {"groups": []}
 
 
-# -----------------------------------------------------------------------
 # Update employee
-# -----------------------------------------------------------------------
 async def update_employee(conn: asyncpg.Connection, employee_id: UUID, payload: EmployeeUpdate) -> dict:
     if not await conn.fetchval("SELECT id FROM employees WHERE id = $1", employee_id):
         raise HTTPException(status_code=404, detail="Employee not found")
@@ -184,9 +174,7 @@ async def update_employee(conn: asyncpg.Connection, employee_id: UUID, payload: 
     return await _get_employee_with_groups(conn, employee_id)
 
 
-# -----------------------------------------------------------------------
 # Delete employee
-# -----------------------------------------------------------------------
 async def delete_employee(conn: asyncpg.Connection, employee_id: UUID) -> str:
     row = await conn.fetchrow(
         "SELECT first_name, last_name FROM employees WHERE id = $1", employee_id
@@ -197,9 +185,7 @@ async def delete_employee(conn: asyncpg.Connection, employee_id: UUID) -> str:
     return f"{row['first_name']} {row['last_name']}"
 
 
-# -----------------------------------------------------------------------
 # Group assignment
-# -----------------------------------------------------------------------
 async def assign_group(conn: asyncpg.Connection, employee_id: UUID, group_id: UUID) -> dict:
     if not await conn.fetchval("SELECT id FROM employees WHERE id = $1", employee_id):
         raise HTTPException(status_code=404, detail="Employee not found")
@@ -241,9 +227,7 @@ async def get_employee_groups(conn: asyncpg.Connection, employee_id: UUID) -> Li
     return [dict(r) for r in rows]
 
 
-# -----------------------------------------------------------------------
 # Query 3 – Department-wise employee count
-# -----------------------------------------------------------------------
 async def get_department_counts(conn: asyncpg.Connection) -> List[DepartmentCount]:
     rows = await conn.fetch(
         """
@@ -256,9 +240,7 @@ async def get_department_counts(conn: asyncpg.Connection) -> List[DepartmentCoun
     return [DepartmentCount(department=r["department"], employee_count=r["employee_count"]) for r in rows]
 
 
-# -----------------------------------------------------------------------
 # Query 4 – Employees who joined within a date range
-# -----------------------------------------------------------------------
 async def get_employees_by_joining_date_range(
     conn: asyncpg.Connection, from_date: date, to_date: date
 ) -> List[dict]:
@@ -275,9 +257,7 @@ async def get_employees_by_joining_date_range(
     return [dict(r) | {"groups": []} for r in rows]
 
 
-# -----------------------------------------------------------------------
 # Multi-step transactional workflow: create employee + assign group
-# -----------------------------------------------------------------------
 async def create_and_assign_group(conn: asyncpg.Connection, payload: CreateAndAssignGroupRequest) -> dict:
     # Validate group exists before starting
     if not await conn.fetchval("SELECT id FROM groups WHERE id = $1", payload.group_id):

@@ -1,7 +1,5 @@
--- ============================================================
 -- Banyan Cloud Employee Management – Database Schema
 -- Run this file in pgAdmin Query Tool on the banyan_employees DB
--- ============================================================
 
 -- 1. Groups table
 CREATE TABLE groups (
